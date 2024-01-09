@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPU Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            /* Stack elements vertically */
+        }
+
+        #container {
+            width: 100%;
+            /* Full width */
+            max-width: 1200px;
+            /* Max width for the layout */
+            margin: auto;
+            /* Center the container */
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        #filter {
+            margin-bottom: 20px;
+        }
+
+        #gpuTable {
+            overflow-x: auto;
+            /* Horizontal scroll for the table on smaller screens */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+            /* Auto table layout for equal column distribution */
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        img {
+            max-width: 100px;
+            /* Responsive image size */
+            height: auto;
+        }
+
+        /* Style filters to display vertically */
+        #filter input,
+        #filter select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        #filter label {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 800px) {
+
+            #filter,
+            #gpuTable {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="container">
+        <div id="filter">
+            <h2>Filter</h2>
+            <!-- Search input -->
+            <label for="searchInput">Search:</label>
+            <input type="text" id="searchInput" onkeyup="filterGPUs()" placeholder="Search for GPUs..">
+
+            <!-- Company dropdown filter -->
+            <label for="companyFilter">Company:</label>
+            <select id="companyFilter" onchange="filterGPUs()">
+                <option value="">All</option>
+                <option value="NVIDIA">NVIDIA</option>
+                <option value="AMD">AMD</option>
+                <option value="Intel">Intel</option>
+                <!-- Add more options as needed -->
+            </select>
+
+            <!-- Price range filter -->
+            <label for="priceRange">Price range:</label>
+            <input type="range" id="priceRange" min="0" max="1000" oninput="updatePriceValue(this.value)"
+                onchange="filterGPUs()" value="1000">
+            <span id="priceValue">$1000</span>
+
+            <!-- Series dropdown filter -->
+            <label for="seriesFilter">Series:</label>
+            <select id="seriesFilter" onchange="filterGPUs()">
+                <option value="">All</option>
+                <option value="RTX">RTX</option>
+                <option value="GTX">GTX</option>
+                <option value="RX">RX</option>
+                <!-- Add more series options here -->
+            </select>
+        </div>
+
+        <div id="gpuTable">
+            <h1>GPU Comparison</h1>
+            <table id="comparisonTable">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Series</th>
+                        <th>Company</th>
+                        <th>Lowest Price</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be inserted here using JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function updatePriceValue(value) {
+            document.getElementById('priceValue').textContent = `$${value}`;
+        }
+
+        function filterGPUs() {
+            const searchInput = document.getElementById("searchInput").value.toLowerCase();
+            const companyFilter = document.getElementById("companyFilter").value;
+            const priceRangeValue = parseInt(document.getElementById("priceRange").value, 10);
+            const seriesFilter = document.getElementById("seriesFilter").value;
+            const table = document.getElementById("comparisonTable");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let visible = true;
+                const td = tr[i].getElementsByTagName("td");
+
+                // Filter by search input
+                if (searchInput && !td[1].textContent.toLowerCase().includes(searchInput) &&
+                    !td[2].textContent.toLowerCase().includes(searchInput)) {
+                    visible = false;
+                }
+
+                // Filter by company
+                if (companyFilter && td[2].textContent !== companyFilter) {
+                    visible = false;
+                }
+
+                // Filter by price
+                const price = parseInt(td[3].textContent.replace('$', ''), 10);
+                if (isNaN(price) || price > priceRangeValue) {
+                    visible = false;
+                }
+
+                // Filter by series
+                if (seriesFilter && !td[1].textContent.includes(seriesFilter)) {
+                    visible = false;
+                }
+
+                tr[i].style.display = visible ? "" : "none";
+            }
+        }
+
+        // Sample data array
+        const gpuData = [
+            {
+                image: "image_url_1.jpg",
+                series: "RTX",
+                company: "NVIDIA",
+                price: 799,
+                link: "product_link_1"
+            },
+            {
+                image: "image_url_2.jpg",
+                series: "GTX",
+                company: "NVIDIA",
+                price: 399,
+                link: "product_link_2"
+            },
+            {
+                image: "image_url_3.jpg",
+                series: "GTX",
+                company: "Intel",
+                price: 399,
+                link: "product_link_2"
+            },
+            {
+                image: "image_url_4.jpg",
+                series: "GTX",
+                company: "NVIDIA",
+                price: 399,
+                link: "product_link_2"
+            },
+            {
+                image: "image_url_5.jpg",
+                series: "GTX",
+                company: "ds",
+                price: 399,
+                link: "product_link_2"
+            },
+            // ... add more GPU data objects here
+        ];
+
+        // Function to populate table with data
+        function populateTable(data) {
+            const tableBody = document.getElementById('comparisonTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ""; // Clear table body
+
+            // Iterate over each GPU data object and add a row to the table
+            data.forEach((gpu) => {
+                let row = tableBody.insertRow();
+                let cellImage = row.insertCell(0);
+                let cellSeries = row.insertCell(1);
+                let cellCompany = row.insertCell(2);
+                let cellPrice = row.insertCell(3);
+                let cellLink = row.insertCell(4);
+
+                cellImage.innerHTML = `<img src="${gpu.image}" alt="${gpu.series}">`;
+                cellSeries.textContent = gpu.series;
+                cellCompany.textContent = gpu.company;
+                cellPrice.textContent = `$${gpu.price}`;
+                cellLink.innerHTML = `<a href="${gpu.link}" target="_blank">Product Page</a>`;
+            });
+        }
+
+        // Call populateTable on page load
+        window.onload = function () {
+            populateTable(gpuData);
+        };
+    </script>
+
+</body>
+
+</html>
